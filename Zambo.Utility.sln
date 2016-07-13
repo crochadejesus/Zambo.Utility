@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zambo.Utility", "Zambo.Utility\Zambo.Utility.csproj", "{14D76C25-8F3D-4AAC-A61B-B2319438C5E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zambo.Interface", "Zambo.Interface\Zambo.Interface.csproj", "{04C84D2A-82D7-4D33-A538-D13CB8643074}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zambo.Models", "Zambo.Models\Zambo.Models.csproj", "{003D09A2-0656-4A81-B63F-60E0A790CB2A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14D76C25-8F3D-4AAC-A61B-B2319438C5E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14D76C25-8F3D-4AAC-A61B-B2319438C5E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14D76C25-8F3D-4AAC-A61B-B2319438C5E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14D76C25-8F3D-4AAC-A61B-B2319438C5E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04C84D2A-82D7-4D33-A538-D13CB8643074}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04C84D2A-82D7-4D33-A538-D13CB8643074}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04C84D2A-82D7-4D33-A538-D13CB8643074}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04C84D2A-82D7-4D33-A538-D13CB8643074}.Release|Any CPU.Build.0 = Release|Any CPU
+		{003D09A2-0656-4A81-B63F-60E0A790CB2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{003D09A2-0656-4A81-B63F-60E0A790CB2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{003D09A2-0656-4A81-B63F-60E0A790CB2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{003D09A2-0656-4A81-B63F-60E0A790CB2A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
