@@ -8,7 +8,6 @@
 //
 
 using System;
-using System.Net;
 using System.Net.Mail;
 using System.Text;
 
@@ -35,17 +34,25 @@ namespace Zambo.Utility
 
 		public MensagemBll()
 		{
-			this.host = "hermes.travelace.com.br";
-			this.userName = "cotacao@travelace.com.br";
-			this.pass = "";
-			this.porta = 465;
+			// Abra a configuração de um arquivo Web.Config de um projeto ASP.NET MVC
+			// Exemplo de Web.Config
+			/*
+			   <appSettings>
+				 <add key="mailServer" value="smtp.zambotecnologia.com.br,587,noreply,123456" />   
+			   </appSettings>
+			*/
+			var mailServer = System.Configuration.ConfigurationManager.AppSettings["mailServer"].Split(',');
+			this.host = mailServer[0];
+			this.porta = Convert.ToInt32(mailServer[1]);
+			this.userName = mailServer[2];
+			this.pass = mailServer[3];
 		}
 
 		/// <summary>
 		/// Caso deseje utilizar um servidor de email diferente ou se autenticar utilizando outro endereço de email
 		/// </summary>
-		/// <param name="servidor">Endereço do servidor. Ex: sheol.travelace.com.br</param>
-		/// <param name="usuario">Endereço de email de uma conta válida. Ex: cjesus@travelace.com.br</param>
+		/// <param name="servidor">Endereço do servidor. Ex: sheol.zambotecnologia.com.br</param>
+		/// <param name="usuario">Endereço de email de uma conta válida. Ex: cjesus@zambotecnologia.com.br</param>
 		/// <param name="senha">Senha do email</param>
 		public void ConfigurarServidor(string servidor, string usuario, string senha, int porta)
 		{
@@ -63,71 +70,81 @@ namespace Zambo.Utility
 		public Models.RetornoAcaoModel EnviarMensagem(Models.MensagemEmailModel mensagem)
 		{
 			Models.RetornoAcaoModel retorno = new Models.RetornoAcaoModel();
+			MailMessage mailMessage = new MailMessage();
+
+			System.Net.Mail.SmtpClient smtpClient = new System.Net.Mail.SmtpClient
+			{
+				Host = this.host,
+				Port = this.porta,
+				Credentials = new System.Net.NetworkCredential(this.userName, this.pass),
+				EnableSsl = false,
+				Timeout = 10000
+			};
 
 			try
 			{
-				SmtpClient smtpClient = new SmtpClient(this.host);
-				NetworkCredential basicCredential = new NetworkCredential(this.userName, this.pass);
-				smtpClient.Credentials = basicCredential;
-				smtpClient.EnableSsl = true;
-				smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
-				smtpClient.Port = this.porta;
-
-				MailMessage message = new MailMessage();
-				message.IsBodyHtml = mensagem.IsHtml;
-				message.Priority = MailPriority.High;
-				message.BodyEncoding = System.Text.Encoding.Default;
-
 				//From
 				if (!string.IsNullOrEmpty(mensagem.De))
 				{
-					message.From = new MailAddress(mensagem.De);
+					mailMessage.From = new MailAddress(mensagem.De);
 
 					//Reply
 					if (!string.IsNullOrEmpty(mensagem.Reply))
 					{
-						message.ReplyToList.Add(mensagem.Reply);
+						mailMessage.ReplyToList.Add(mensagem.Reply);
 					}
 
 					//To
-					if (mensagem.Para.Length != 0)
+					int tamanho = mensagem.Para.Length;
+					if (tamanho > 0)
 					{
-						for (byte i = 0; i < mensagem.Para.Length; ++i)
+						for (int i = 0; i < tamanho; i++)
 						{
-							if (!string.IsNullOrEmpty(Convert.ToString(mensagem.Para[i])))
+							if (!string.IsNullOrEmpty(mensagem.Para[i]))
 							{
-								message.To.Add(mensagem.Para[i]);
+								mailMessage.To.Add(new MailAddress(mensagem.Para[i]));
+							}
+							else
+							{
+								retorno.Mensagem = "Não foi passado pelo menos um destinatário para a mensagem!";
 							}
 						}
 
 						//CC
-						for (byte i = 0; i < mensagem.Cc.Length; ++i)
+						if (mensagem.Cc != null)
 						{
-							if (!string.IsNullOrEmpty(Convert.ToString(mensagem.Cc[i])))
+							for (int i = 0; i < mensagem.Cc.Length; i++)
 							{
-								message.CC.Add(mensagem.Cc[i]);
+								if (!string.IsNullOrEmpty(mensagem.Cc[i]))
+								{
+									mailMessage.CC.Add(new MailAddress(mensagem.Cc[i]));
+								}
 							}
 						}
 
 						//CCO
-						for (byte i = 0; i < mensagem.Cco.Length; ++i)
+						if (mensagem.Cco != null)
 						{
-							if (!string.IsNullOrEmpty(Convert.ToString(mensagem.Cco[i])))
+							for (int i = 0; i < mensagem.Cco.Length; i++)
 							{
-								message.Bcc.Add(mensagem.Cco[i]);
+								if (!string.IsNullOrEmpty(mensagem.Cco[i]))
+								{
+									mailMessage.Bcc.Add(new MailAddress(mensagem.Cco[i]));
+								}
 							}
 						}
 
 						//Subject
-						message.Subject = mensagem.Assunto;
+						mailMessage.Subject = mensagem.Assunto;
 
 						//Body
-						message.IsBodyHtml = mensagem.IsHtml;
-						message.BodyEncoding = System.Text.Encoding.Default;
-						message.Body = mensagem.Corpo;
+						mailMessage.IsBodyHtml = mensagem.IsHtml;
+						mailMessage.BodyEncoding = System.Text.Encoding.Default;
+						mailMessage.Priority = MailPriority.Normal;
+						mailMessage.Body = mensagem.Corpo;
 
 						//Envia a mensagem
-						smtpClient.Send(message);
+						smtpClient.Send(mailMessage);
 
 						retorno.Resultado = true;
 					}
@@ -142,51 +159,58 @@ namespace Zambo.Utility
 				}
 			}
 			// Testa se o email está criado
-			catch (SmtpFailedRecipientException sfre)
+			catch (SmtpFailedRecipientsException sfre)
 			{
-				retorno.Mensagem = sfre.Message;
-				return retorno;
+				for (int i = 0; i < sfre.InnerExceptions.Length; i++)
+				{
+					SmtpStatusCode status = sfre.InnerExceptions[i].StatusCode;
+					if (status == SmtpStatusCode.MailboxBusy ||
+						status == SmtpStatusCode.MailboxUnavailable)
+					{
+						retorno.Mensagem = "Delivery failed - retrying in 5 seconds.";
+						System.Threading.Thread.Sleep(5000);
+						smtpClient.Send(mailMessage);
+					}
+					else
+					{
+						retorno.Mensagem = string.Format("Failed to deliver message to {0}", sfre.InnerExceptions[i].FailedRecipient);
+					}
+				}
 			}
 			catch (FormatException fex)
 			{
-				retorno.Mensagem = fex.Message;
-				return retorno;
+				retorno.Mensagem = fex.ToString();
 			}
 			catch (Exception ex)
 			{
-				retorno.Mensagem = ex.Message;
-				return retorno;
+				retorno.Mensagem = ex.ToString();
 			}
 
 			return retorno;
 		}
 
-		public Models.MensagemEmailModel MontarCabecalhoCorpoEmail(Models.DadosTitularModel dadosTitularModel,
-		                                                           Models.SimulacaoCompraRequestModel simulacaoCompraRequestModel,
-		                                                           Models.SimulacaoCompraModel simulacaoCompraModel)
+		public Models.MensagemEmailModel MontarCabecalhoCorpoEmail(object dadosParaPreencherOCorpo)
 		{
 			Models.MensagemEmailModel mensagemEmailModel = new Models.MensagemEmailModel();
 
 			// De
-			mensagemEmailModel.De = "cotacao@travelace.com.br";
-			mensagemEmailModel.Reply = string.Empty;
+			mensagemEmailModel.De = "noreply@zambotecnologia.com.br";
+			mensagemEmailModel.Reply = "noreply@zambotecnologia.com.br";
 			// Para
-			mensagemEmailModel.Para = new string[] {dadosTitularModel.Email};
-			mensagemEmailModel.Cc = new string[0];
-			mensagemEmailModel.Cco = new string[0];
+			mensagemEmailModel.Para = new string[] { dadosParaPreencherOCorpo.Email };
+			mensagemEmailModel.Cc = null;
+			mensagemEmailModel.Cco = null;
 			// Assunto
 			mensagemEmailModel.Assunto = "Travel Ace - Cotação";
 
 			// Corpo
-			mensagemEmailModel.Corpo = this.MontarHtml(dadosTitularModel, simulacaoCompraRequestModel, simulacaoCompraModel);
+			mensagemEmailModel.Corpo = this.MontarHtml(dadosParaPreencherOCorpo);
 			mensagemEmailModel.IsHtml = true;
 
 			return mensagemEmailModel;
-    	}
+		}
 
-	    string MontarHtml(Models.DadosTitularModel dadosTitularModel,
-		                          Models.SimulacaoCompraRequestModel simulacaoCompraRequestModel,
-								  Models.SimulacaoCompraModel simulacaoCompraModel)
+		private string MontarHtml(object dadosParaPreencherOCorpo)
 		{
 			StringBuilder html = new StringBuilder();
 			html.Append("<!DOCTYPE html>");
@@ -197,281 +221,6 @@ namespace Zambo.Utility
 			html.Append("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
 			html.Append("</head>");
 			html.Append("<body>");
-			html.Append("<div class='rcmBody'>");
-			html.Append("<table id='CobertGeral' style='margin: 0 auto' class='stripe row-border order-column' cellspacing='0' width='1024'>");
-			html.Append("<thead>");
-			html.Append("<tr>");
-			html.Append("<td colspan='4'>");
-			html.Append("<img style='border-bottom: 3px solid #464a88' src='https://intravel.travelace.com.br/Content/img/topo-email-1024x768.jpg' alt='topo travelace'>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<td>");
-			html.Append("<br>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<td colspan='4' style='background-color: #ffffff'>");
-			html.Append("Prezado <strong>" + dadosTitularModel.NomeCompleto + "</strong>,");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<td colspan='4' style='background-color: #ffffff; height: 30px' class='azulTabNew'>");
-			html.Append("Abaixo a cotação dos produtos para o(s) destino(s) ");
-			html.Append("<strong style='font-weight: bold'>" + simulacaoCompraRequestModel.Destino + "</strong>, para ");
-			html.Append("<strong>" + simulacaoCompraRequestModel.QtdPax + " passageiros</strong>, com o periodo de viagem do dia ");
-			html.Append("<strong style='font-weight: bold'>" + simulacaoCompraRequestModel.DataIda + "</strong> até ");
-			html.Append("<strong style='font-weight: bold'>" + simulacaoCompraRequestModel.DataVolta + "</strong>, totalizando ");
-			html.Append("<strong style='font-weight: bold'>" + simulacaoCompraModel.DiasViagem + " dias.</strong>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<td colspan='4' style='background-color: #ffffff; height: 30px'>");
-			html.Append("<h4 style='margin: 0 0 10px 0; font-weight: lighter'>");
-			html.Append("Cotação valida somente para a data de hoje ");
-			html.Append("<strong style='font-weight: bold'>" + System.DateTime.Today.ToString("dd/MM/yyyy") + "</strong> | Câmbio do Dia: ");
-			html.Append("<strong>" + simulacaoCompraModel.ValorDoCambio + "</strong>");
-			html.Append("</h4>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<td>");
-			html.Append("<br>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr style='height: 40px'>");
-			html.Append("<th style='background-color: #d8e1f0; color: #464a88; text-align: left !important; width: 200px'>Cobertura</th>");
-			html.Append("<th style='background-color: #d8e1f0; color: #464a88; text-align: center; width: 150px' class='centertxt nameProduct'>" + simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Descricao + "</th>");
-			html.Append("<th style='background-color: #d8e1f0; color: #464a88; text-align: center; width: 150px' class='centertxt nameProduct'>" + simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Descricao + "</th>");
-			html.Append("<th style='background-color: #d8e1f0; color: #464a88; text-align: center; width: 150px' class='centertxt nameProduct'>" + simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Descricao + "</th>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<th colspan='4' style='color: #ffffff; background-color: #464a88; text-align: left !important' class='pretoTabNew TabNewFont'>Descrição dos Serviços e Limites de Valores</th>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<th></th>");
-			html.Append("<th></th>");
-			html.Append("<th></th>");
-			html.Append("</tr>");
-			html.Append("</thead>");
-			html.Append("<tbody>");
-				var tamanhoBeneficios = simulacaoCompraModel.Beneficios.Length;
-				for (int i = 0; i < tamanhoBeneficios; i++) 
-				{
-					var idBeneficio = simulacaoCompraModel.Beneficios[i].IdBeneficio;
-					int resto = i % 2;
-					if (resto == 0) // par
-					{
-						html.Append("<tr style='height: 40px' bgcolor='#cccccc'>");
-						html.Append("<td style='border: 1px solid #ffffff'>" + simulacaoCompraModel.Beneficios[i].Descricao + "</td>");
-						var tamanhoBeneficiosMaiorValor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios.Length;
-						uint contadorBeneficiosMaiorValor = 0;
-					    for (int j = 0; j < tamanhoBeneficiosMaiorValor; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosMaiorValor++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else 
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							} else if (j == (tamanhoBeneficiosMaiorValor - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosMaiorValor == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-						}
-
-						var tamanhoBeneficiosValorMedio = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios.Length;
-						uint contadorBeneficiosValorMedio = 0;
-						for (int j = 0; j < tamanhoBeneficiosValorMedio; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosValorMedio++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							}
-							else if (j == (tamanhoBeneficiosValorMedio - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosValorMedio == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-	 					}
-
-						var tamanhoBeneficiosMenorValor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios.Length;
-						uint contadorBeneficiosMenorValor = 0;
-						for (int j = 0; j < tamanhoBeneficiosMenorValor; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosMenorValor++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							}
-							else if (j == (tamanhoBeneficiosMenorValor - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosMenorValor == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-	 					}
-						html.Append("</tr>");
-					}
-					else // impar
-					{
-						html.Append("<tr style='height: 40px' bgcolor='#e5e5e5'>");
-						html.Append("<td style='border: 1px solid #ffffff'>" + simulacaoCompraModel.Beneficios[i].Descricao + "</td>");
-						var tamanhoBeneficiosMaiorValor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios.Length;
-						uint contadorBeneficiosMaiorValor = 0;
-						for (int j = 0; j < tamanhoBeneficiosMaiorValor; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosMaiorValor++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							}
-							else if (j == (tamanhoBeneficiosMaiorValor - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosMaiorValor == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-						}
-
-						var tamanhoBeneficiosValorMedio = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios.Length;
-						uint contadorBeneficiosValorMedio = 0;
-						for (int j = 0; j < tamanhoBeneficiosValorMedio; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosValorMedio++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							}
-							else if (j == (tamanhoBeneficiosValorMedio - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosValorMedio == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-						}
-
-						var tamanhoBeneficiosMenorValor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios.Length;
-						uint contadorBeneficiosMenorValor = 0;
-						for (int j = 0; j < tamanhoBeneficiosMenorValor; j++)
-						{
-							var idBeneficioProduto = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios[j].IdBeneficio;
-							if (idBeneficio == idBeneficioProduto)
-							{
-								contadorBeneficiosMenorValor++;
-								var valor = simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Beneficios[j].Valor;
-								if (!string.IsNullOrWhiteSpace(valor))
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'>" + valor + "</td>");
-								}
-								else
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-
-								break;
-							}
-							else if (j == (tamanhoBeneficiosMenorValor - 1)) // Testará se nenhum dos benefícios coincindio
-							{
-								if (contadorBeneficiosMenorValor == 0)
-								{
-									html.Append("<td style='text-align: center; border: 1px solid #ffffff' class='center'> - </td>");
-								}
-							}
-						}
-						html.Append("</tr>");
-					}
-				}
-			html.Append("</tbody>");
-			html.Append("<tfoot class='tFootMod'>");
-			html.Append("<tr id='LoopUpgVal'>");
-			html.Append("<td class='whiteline'>Valor do Produto + Benefício</td>");
-			html.Append("<td style='font-size: 17px; color: #ffffff; text-align: center; background-color: #00589a; height: 50px; border: 1px solid #ffffff' class='centertxt ValorSizeBen FiftyGetVal'>");
-			html.Append("<span>R$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Tarifa.Valor + "/ US$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoMaiorValor.Tarifa.ValorMoeda + "</span>");
-			html.Append("</td>");
-			html.Append("<td style='font-size: 17px; color: #ffffff; text-align: center; background-color: #00589a; height: 50px; border: 1px solid #ffffff' class='centertxt ValorSizeBen FiftyGetVal'>");
-			html.Append("<span>R$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Tarifa.Valor + "/ US$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoValorMedio.Tarifa.ValorMoeda + "</span>");
-			html.Append("</td>");
-			html.Append("<td style='font-size: 17px; color: #ffffff; text-align: center; background-color: #00589a; height: 50px; border: 1px solid #ffffff' class='centertxt ValorSizeBen FiftyGetVal'>");
-			html.Append("<span>R$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Tarifa.Valor + "/ US$ " + simulacaoCompraModel.ProdutosRecomendados.ProdutoMenorValor.Tarifa.ValorMoeda + "</span>");
-			html.Append("</td>");
-			html.Append("</tr>");
-			html.Append("<tr>");
-			html.Append("<th colspan='4' style='color: #ffffff; background-color: #464a88; text-align: left !important; height: 50px' class='pretoTabNew TabNewFont'></th>");
-			html.Append("</tr>");
-			html.Append("</tfoot>");
-			html.Append("</table>");
-			html.Append("<br>");
-			html.Append("Atenciosamente, ");
-			html.Append("<br>");
-			html.Append("<br>");
-			html.Append("<strong>Travel Ace Assistancia ao Viajante</strong>");
-			html.Append("<br>");
-			html.Append("<strong>Email:</strong><a href='mailto:cotacao@travelace.com.br' rel='noreferrer'>cotacao@travelace.com.br</a>");
-			html.Append("<br>");
-			html.Append("</div>");
 			html.Append("</body>");
 			html.Append("</html>");
 

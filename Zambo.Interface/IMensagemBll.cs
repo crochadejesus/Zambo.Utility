@@ -13,9 +13,7 @@ namespace Zambo.Interface
 	{
 		void ConfigurarServidor(string servidor, string usuario, string senha, int porta);
 		Models.RetornoAcaoModel EnviarMensagem(Models.MensagemEmailModel mensagem);
-		Models.MensagemEmailModel MontarCabecalhoCorpoEmail(Models.DadosTitularModel dadosTitularModel,
-															Models.SimulacaoCompraRequestModel simulacaoCompraRequestModel,
-															Models.SimulacaoCompraModel simulacaoCompraModel);
+		Models.MensagemEmailModel MontarCabecalhoCorpoEmail(object dadosParaPreencherOCorpo);
 	}
 }
 
