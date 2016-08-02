@@ -1,5 +1,5 @@
 ﻿/*!
- * zambo_utility.js v1.0.29072016
+ * zambo_utility.js v1.0.01082016
  * Autor: Cláudio Rocha de Jesus <crochadejesus@zambotecnologia.com.br>
  * Created: 15/07/2016 11:55
  * Copyright (c) 2016 Zambo Tecnologia Ltda
@@ -139,8 +139,8 @@ function isFormValido() {
 * Uso: <input type="text" name="email" onblur="validacaoEmail(f1.email)" maxlength="60" size='65'>
 */
 function isEmailValido(campo) {
-	usuario = campo.substring(0, campo.indexOf("@"));
-	dominio = campo.substring(campo.indexOf("@")+ 1, campo.length);
+	var usuario = campo.substring(0, campo.indexOf("@"));
+	var dominio = campo.substring(campo.indexOf("@")+ 1, campo.length);
 
 	if ((usuario.length >=1) &&
 	    (dominio.length >=3) && 
@@ -386,6 +386,17 @@ function bindNumericKeypress() {
         }
     });
 }
+
+/*
+* Função para evitar digitação de caracteres em campos Numéricos
+* Uso <input type="text" maxlength="15" onkeypress="wgta.somenteNumeros(event)">
+*/
+Utility.fn.somenteNumeros = function (evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+        evt.preventDefault();
+    }
+};
 
 function bindDecimalKeypress() {
     $(".decimal").keydown(function (e) {
@@ -811,12 +822,12 @@ function MascaraData(data) {
     return formataCampo(data, '00/00/0000', event);
 }
 
-//adiciona mascara ao telefone
-function MascaraTelefone(tel) {
-    if (mascaraInteiro(tel) == false) {
-        event.returnValue = false;
-    }
-    return formataCampo(tel, '(00) 0000-0000', event);
+/*
+* Função para adicionar máscara ao telefone
+* Uso <input type="text" maxlength="15" onkeyup="wgta.mascaraTelefone(this, event)">
+*/
+Utility.fn.mascaraTelefone = function (campo, event) {
+        return formataCampo(campo, '(00) 00000-0000', event);
 }
 
 //adiciona mascara ao CPF
@@ -905,33 +916,30 @@ function ValidarCNPJ(ObjCnpj) {
 //formata de forma generica os campos
 function formataCampo(campo, Mascara, evento) {
     var boleanoMascara;
+    var exp = /\-|\.|\/|\(|\)| /g;
+    var campoSoNumeros = campo.value.toString().replace( exp, "" );
+    var posicaoCampo = 0;    
+    var novoValorCampo = "";
+    var tamanhoMascara = campoSoNumeros.length;; 
 
-    var Digitato = evento.keyCode;
-    exp = /\-|\.|\/|\(|\)| /g
-    campoSoNumeros = campo.value.toString().replace(exp, "");
-
-    var posicaoCampo = 0;
-    var NovoValorCampo = "";
-    var TamanhoMascara = campoSoNumeros.length;;
-
-    if (Digitato != 8) { // backspace 
-        for (i = 0; i <= TamanhoMascara; i++) {
-            boleanoMascara = ((Mascara.charAt(i) == "-") || (Mascara.charAt(i) == ".")
-                                                    || (Mascara.charAt(i) == "/"))
-            boleanoMascara = boleanoMascara || ((Mascara.charAt(i) == "(")
-                                                    || (Mascara.charAt(i) == ")") || (Mascara.charAt(i) == " "))
-            if (boleanoMascara) {
-                NovoValorCampo += Mascara.charAt(i);
-                TamanhoMascara++;
-            } else {
-                NovoValorCampo += campoSoNumeros.charAt(posicaoCampo);
-                posicaoCampo++;
-            }
-        }
-        campo.value = NovoValorCampo;
-        return true;
-    } else {
-        return true;
+    if (evento.keyCode !== 8) { // backspace 
+            for(var i = 0; i <= tamanhoMascara; i++) { 
+                    boleanoMascara = ((mascara.charAt(i) === "-") || (mascara.charAt(i) === ".")
+                                                            || (mascara.charAt(i) === "/")) 
+                    boleanoMascara = boleanoMascara || ((mascara.charAt(i) === "(") 
+                                                            || (mascara.charAt(i) === ")") || (mascara.charAt(i) === " ")) 
+                    if (boleanoMascara) { 
+                            novoValorCampo += mascara.charAt(i); 
+                            tamanhoMascara++;
+                    } else { 
+                            novoValorCampo += campoSoNumeros.charAt(posicaoCampo); 
+                            posicaoCampo++; 
+                    }              
+            }      
+            campo.value = novoValorCampo;
+            return true; 
+    } else { 
+            return true; 
     }
 }
 /*
