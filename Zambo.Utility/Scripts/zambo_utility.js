@@ -1,5 +1,5 @@
 ﻿/*!
- * zambo_utility.js v1.0.01082016
+ * zambo_utility.js v1.1.15082016
  * Autor: Cláudio Rocha de Jesus <crochadejesus@zambotecnologia.com.br>
  * Created: 15/07/2016 11:55
  * Copyright (c) 2016 Zambo Tecnologia Ltda
@@ -830,12 +830,14 @@ Utility.fn.mascaraTelefone = function (campo, event) {
         return formataCampo(campo, '(00) 00000-0000', event);
 }
 
-//adiciona mascara ao CPF
-function MascaraCPF(cpf) {
-    if (mascaraInteiro(cpf) == false) {
-        event.returnValue = false;
+/*
+ * Utilização: <input id="CPFTitular" class="form-control cpf" type="text" name="CPFTitular" maxlength="14" onmouseout="mascaraCPF(this, event);" onkeypress="mascaraCPF(this, event);">
+ */
+function mascaraCPF(campo, evt) {
+    if (mascaraInteiro(evt) == false) {
+        evt.returnValue = false;
     }
-    return formataCampo(cpf, '000.000.000-00', event);
+    return formataCampo(campo, '000.000.000-00', evt);
 }
 
 //valida telefone
@@ -882,9 +884,10 @@ function ValidarCPF(Objcpf) {
 }
 
 //valida numero inteiro com mascara
-function mascaraInteiro() {
-    if (event.keyCode < 48 || event.keyCode > 57) {
-        event.returnValue = false;
+function mascaraInteiro(evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+        evt.returnValue = false;
         return false;
     }
     return true;
@@ -914,34 +917,60 @@ function ValidarCNPJ(ObjCnpj) {
 }
 
 //formata de forma generica os campos
-function formataCampo(campo, Mascara, evento) {
-    var boleanoMascara;
-    var exp = /\-|\.|\/|\(|\)| /g;
-    var campoSoNumeros = campo.value.toString().replace( exp, "" );
-    var posicaoCampo = 0;    
-    var novoValorCampo = "";
-    var tamanhoMascara = campoSoNumeros.length;; 
+function formataCampo(campo, mascara, evt) {
+    var boleanoMascara,
+        exp = /\-|\.|\/|\(|\)| /g,
+        campoSoNumeros = campo.value.toString().replace(exp, ""),
+        posicaoCampo = 0,
+        novoValorCampo = "",
+        tamanhoMascara = campoSoNumeros.length,
+        charCode = (evt.which) ? evt.which : event.keyCode;
 
-    if (evento.keyCode !== 8) { // backspace 
-            for(var i = 0; i <= tamanhoMascara; i++) { 
-                    boleanoMascara = ((mascara.charAt(i) === "-") || (mascara.charAt(i) === ".")
-                                                            || (mascara.charAt(i) === "/")) 
-                    boleanoMascara = boleanoMascara || ((mascara.charAt(i) === "(") 
-                                                            || (mascara.charAt(i) === ")") || (mascara.charAt(i) === " ")) 
-                    if (boleanoMascara) { 
-                            novoValorCampo += mascara.charAt(i); 
-                            tamanhoMascara++;
-                    } else { 
-                            novoValorCampo += campoSoNumeros.charAt(posicaoCampo); 
-                            posicaoCampo++; 
-                    }              
-            }      
-            campo.value = novoValorCampo;
-            return true; 
-    } else { 
-            return true; 
+    if (charCode !== 8) { // backspace 
+        for (var i = 0; i <= tamanhoMascara; i++) {
+            boleanoMascara = ((mascara.charAt(i) === "-") || (mascara.charAt(i) === ".")
+                                                    || (mascara.charAt(i) === "/"))
+            boleanoMascara = boleanoMascara || ((mascara.charAt(i) === "(")
+                                                    || (mascara.charAt(i) === ")") || (mascara.charAt(i) === " "))
+            if (boleanoMascara) {
+                novoValorCampo += mascara.charAt(i);
+                tamanhoMascara++;
+            } else {
+                novoValorCampo += campoSoNumeros.charAt(posicaoCampo);
+                posicaoCampo++;
+            }
+        }
+        campo.value = novoValorCampo;
+        return true;
+    } else {
+        return true;
     }
 }
 /*
  * Extraído de https://gist.github.com/ricardodantas/6031749
  */
+
+
+
+/*
+ * Permite somente a digitação de caracteres numéricos e verifica o atributo maxlength, para bloquear o tamanho máximo de caracteres.
+ * Deve-se atribuir a classe "numerico".
+ * Útil quando o html é inserido dinamicamente pelo javascript.
+ * Utilização: <input id="NumeroParcelas" class="form-control numerico" type="number" min="1" max="12" maxlength="2" value="" name="NumeroParcelas" onkeypress="somenteNumeros(event);">
+ */
+function somenteNumeros(evt) {
+    /*
+        */
+    var teclaValida = false;
+
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+        evt.preventDefault();
+    } else if (charCode !== 8) { // backspace
+        var maxLength = parseInt($('.numerico').attr("maxlength"), 10);
+        var length = parseInt($('.numerico').val().length, 10);
+        if (length >= maxLength) {
+            evt.preventDefault();
+        }
+    }
+}
