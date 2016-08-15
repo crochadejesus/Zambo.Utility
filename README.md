@@ -1,3 +1,3 @@
 # Zambo.Utility
-Uma série de classes e metodos utilizados em vários projetos, que são utilizados repetidas vezes.
-Tanto em C# quanto em javascript.
+Uma série de classes e métodos utilitários em C# e Javascript que são utilizados em vários projetos repetidas vezes.
+
