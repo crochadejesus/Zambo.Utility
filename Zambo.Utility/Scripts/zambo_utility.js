@@ -157,6 +157,32 @@ function isEmailValido(campo) {
 	}
 }
 
+/*
+* Utilização: 
+$.ajax({
+			cache: false,
+			dataType: 'json',
+			type: 'POST',
+			url: base_path + 'Home/FazerSimulacaoCompra',
+			data: { simulacaoCompraRequestModel: simulacaoCompraRequestModel },
+			beforeSend: function (response) {
+			    mostrarLoading();
+			},
+			error: function (data, textStatus, XMLHttpRequest) {
+				criarDialog('idFazerSimulacaoCompra', 'Erro!', XMLHttpRequest);
+			},
+			success: function (data) {
+				if (data.Error != null) {
+					criarDialog('idFazerSimulacaoCompra', 'Erro!', data.Error + '<br>' + data.Mensagem);
+				} else {
+                    .....
+				}
+			},
+			complete: (function () {
+				removerLoading();
+			})
+		});
+*/
 function mostrarLoading() {
     $('body').append('<div id="overlay-carregando" style="background: #ffffff repeat-x; opacity: .75; filter: Alpha(Opacity=75); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;">'+
     					'<div style="background: url(../Content/images/loader.gif) no-repeat 16px bottom; color: #069; padding: 16px 16px 16px 48px; font-size: 25px; height: 45px; width: 180px; position: absolute; top: 45%; left: 43%;">Carregando...</div>'+
@@ -233,9 +259,7 @@ function replaceme(str, regex, nv) {
 }
 
 function validarCPF(cpf) {
-
 	cpf = cpf.replace(/[^\d]+/g,'');
-
 	if (cpf === '') {
 		return false;
 	}
