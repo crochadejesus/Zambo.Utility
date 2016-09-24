@@ -98,6 +98,26 @@ function bindMascaras() {
     });
 }
 
+
+/*
+* Valida todos os campos de um formulário que tenham a classe validar-campo.
+* No elemento label deve ter obrigatoriamento a classe control-label e no elemento input a classe form-control, para eles ficarem em vermelho
+* Exemplo de uso HTML
+*    <!-- NOME COMPLETO-->
+*    <div id="idFormGroupNomeCompleto" class="col-md-4 form-group validar-campo">
+*		<label class="control-label" for="NomeCompleto">NOME COMPLETO<span class="obrigatorio">*</span></label>
+*       <input class="form-control" type="text" name="NomeCompleto" id="NomeCompleto" maxlength="60">
+*    </div>
+* 
+* Exemplo de uso JS
+*       if (isFormValido()) {
+            $("#di").val($("#dataInicial").val());
+            $("#df").val($("#dataFinal").val());
+            $("#ce").val($("#multiEmpresa").val());
+            $("#cvc").val($("#menosCVCint").is(':checked'));
+            $("#f1").submit();
+        }
+*/
 function isFormValido() {
 	var pendencias = [];
 
@@ -122,15 +142,6 @@ function isFormValido() {
     } else {
         return true;   
     }
-    /*
-    * Exemplo de uso
-    * 
-	*    <!-- NOME COMPLETO-->
-	*    <div id="idFormGroupNomeCompleto" class="col-md-4 form-group validar-campo">
-	*		<label class="control-label" for="NomeCompleto">NOME COMPLETO<span class="obrigatorio">*</span></label>
-	*       <input class="form-control" type="text" name="NomeCompleto" id="NomeCompleto" maxlength="60">
-	*    </div>
-    */
 }
 
 /*
