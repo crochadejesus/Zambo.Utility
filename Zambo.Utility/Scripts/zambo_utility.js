@@ -18,9 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// $(document).ready do jQuery
 document.onreadystatechange = function () {
-    if (document.readyState == "complete") {
+    if (document.readyState === "complete") {
         focarNoPrimeiroCampo();
         bindMascaras();
     }
@@ -69,7 +68,7 @@ document.onreadystatechange = function () {
         clearBtn: true,
         autoclose: true
     });
-}
+};
 
 function focarNoPrimeiroCampo() {
     $('input[type=text], textarea, input[type=radio], select').filter(':not([readonly])').filter(':not([disabled])').first().focus();
