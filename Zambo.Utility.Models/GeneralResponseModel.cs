@@ -7,7 +7,7 @@
 //  Copyright (c) 2016  Zambo Tecnologia Ltda
 //
 
-namespace Zambo.Models
+namespace Zambo.Utility.Models
 {
 	public struct GeneralResponseModel<T>
 	{

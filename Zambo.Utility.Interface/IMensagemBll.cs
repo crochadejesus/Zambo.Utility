@@ -7,7 +7,7 @@
 //  Copyright (c) 2016 Zambo Tecnologia Ltda
 //
 
-namespace Zambo.Interface
+namespace Zambo.Utility.Interface
 {
 	public interface IMensagemBll
 	{
