@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Zambo.Utility
 {
-	public struct Utility
+	public static class Utilities
 	{
 		/// <summary>
 		/// Verifica se a dataIda é maior que a dataVolta;
@@ -24,7 +24,7 @@ namespace Zambo.Utility
 		/// <returns>The datas sao validas.</returns>
 		/// <param name="dataIda">Data ida.</param>
 		/// <param name="dataVolta">Data volta.</param>
-		System.Collections.Generic.IList<string> AsDatasSaoValidas(string dataIda, string dataVolta)
+		public static System.Collections.Generic.IList<string> AsDatasSaoValidas(string dataIda, string dataVolta)
 		{
 			System.Collections.Generic.IList<string> inconsistencias = new System.Collections.Generic.List<string>();
 			System.DateTime nDataIda = System.Convert.ToDateTime(dataIda);
@@ -32,19 +32,19 @@ namespace Zambo.Utility
 			int one_day = 1000 * 60 * 60 * 24;// Dia em milisegundos
 			System.DateTime hoje = new DateTime();
 			// Verifica se Ida é maior que Volta
-			var seIdaForMaior = Math.Ceiling((this.GetTime(nDataIda) - this.GetTime(nDataVolta)) / (one_day));
+			var seIdaForMaior = Math.Ceiling((GetTime(nDataIda) - GetTime(nDataVolta)) / (one_day));
 			if (seIdaForMaior > 0)
 			{
 				inconsistencias.Add("- A data de Ida não pode ser maior que a data da Volta.");
 			}
 			// Verificar se Ida é menor que hoje
-			var seIdaMenorQueHoje = Math.Ceiling((this.GetTime(nDataIda) - this.GetTime(hoje)) / (one_day));
+			var seIdaMenorQueHoje = Math.Ceiling((GetTime(nDataIda) - GetTime(hoje)) / (one_day));
 			if (seIdaMenorQueHoje < 0)
 			{
 				inconsistencias.Add("- A data de Ida não pode ser menor que Hoje.");
 			}
 			// Verificar se Volta é menor que hoje
-			var seVoltaMenorQueHoje = Math.Ceiling((this.GetTime(nDataVolta) - this.GetTime(hoje)) / (one_day));
+			var seVoltaMenorQueHoje = Math.Ceiling((GetTime(nDataVolta) - GetTime(hoje)) / (one_day));
 			if (seVoltaMenorQueHoje < 0)
 			{
 				inconsistencias.Add("- A data de Volta não pode ser menor que Hoje.");
@@ -58,7 +58,7 @@ namespace Zambo.Utility
 		/// Corresponde ao getTime() do javascript
 		/// </summary>
 		/// <returns>The time.</returns>
-		double GetTime(DateTime data)
+		public static double GetTime(DateTime data)
 		{
 			double retval = 0;
 			var st = new DateTime(1970, 1, 1);
@@ -67,7 +67,7 @@ namespace Zambo.Utility
 			return retval;
 		}
 
-		double MilliTimeStamp(DateTime TheDate)
+		public static double MilliTimeStamp(DateTime TheDate)
 		{
 			DateTime d1 = new DateTime(1970, 1, 1);
 			DateTime d2 = TheDate.ToUniversalTime();
@@ -83,7 +83,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="value">String</param>
 		/// <returns>string Capitalizada</returns>
-		public string CapitalizeWords(string value)
+		public static string CapitalizeWords(string value)
 		{
 			if (value == null)
 			{
@@ -115,12 +115,12 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns>string Capitalizada</returns>
-		public string CapitalizeWordsCulture(string value)
+		public static string CapitalizeWordsCulture(string value)
 		{
 			return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value);
 		}
 
-		public DateTime DateIsNull(string valor)
+		public static DateTime DateIsNull(string valor)
 		{
 			DateTime data;
 
@@ -146,7 +146,7 @@ namespace Zambo.Utility
 			}
 		}
 
-		public ushort UInt16IsEmpty(string valor)
+		public static ushort UInt16IsEmpty(string valor)
 		{
 			ushort inteiro;
 
@@ -172,7 +172,7 @@ namespace Zambo.Utility
 			}
 		}
 
-		public byte ByteIsEmpty(string valor)
+		public static byte ByteIsEmpty(string valor)
 		{
 			byte inteiro;
 
@@ -205,7 +205,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="valor"> Objeto a ser testado </param>
 		/// <returns> Retorna 0 se não for inteiro </returns>
-		public int IsUint(object valor)
+		public static int IsUint(object valor)
 		{
 			Regex rgx = new Regex("[0-9]", RegexOptions.IgnoreCase);
 			MatchCollection matchs = rgx.Matches(valor.ToString());
@@ -219,7 +219,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="valor"> Objeto a ser testado </param>
 		/// <returns> Retorna 0 se não for float </returns>
-		public int IsSingle(object valor)
+		public static int IsSingle(object valor)
 		{
 			Regex rgx = new Regex("[9,9999]");
 			MatchCollection matchs = rgx.Matches(valor.ToString());
@@ -231,7 +231,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="valor"> Objeto a ser testado </param>
 		/// <returns> Verdadeiro ou Falso </returns>
-		public bool TestaSeEhNumero(object valor)
+		public static bool TestaSeEhNumero(object valor)
 		{
 			int testaSeENumero;
 			return (Int32.TryParse(valor.ToString(), out testaSeENumero));
@@ -242,7 +242,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="email"> Endereço de e-mail a ser testado </param>
 		/// <returns> Retorna verdadeiro caso coincida com o padrão </returns>
-		public bool TestaSeEmailEhValido(object email)
+		public static bool TestaSeEmailEhValido(object email)
 		{
 			string template = @"\b[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}";
 			Regex rgx = new Regex(template);
@@ -254,7 +254,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="login"> Nome de login a ser testado </param>
 		/// <returns> Retorna verdadeiro caso coincida com o padrão </returns>
-		public bool TestaSeLoginEhValido(object login)
+		public static bool TestaSeLoginEhValido(object login)
 		{
 			string template = @"\b^[0-9][a-zA-Z]";
 			Regex rgx = new Regex(template);
@@ -266,7 +266,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="cep"> CEP a ser testado </param>
 		/// <returns> Verdadeiro se coincidir com o padrão </returns>
-		public bool TestaSeCepEhValido(object cep)
+		public static bool TestaSeCepEhValido(object cep)
 		{
 			string template = @"\b[0-9]{5}-[0-9]{3}";
 			Regex rgx = new Regex(template);
@@ -278,7 +278,7 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="listToClone">List to clone.</param>
 		/// <typeparam name="T">The 1st type parameter.</typeparam>
-		public IList<T> Clone<T>(this IList<T> listToClone)
+		public static IList<T> Clone<T>(this IList<T> listToClone)
 		{
 			var array = new T[listToClone.Count];
 			listToClone.CopyTo(array, 0);
@@ -287,4 +287,3 @@ namespace Zambo.Utility
 		}
 	}
 }
-

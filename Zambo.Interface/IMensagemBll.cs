@@ -12,7 +12,7 @@ namespace Zambo.Interface
 	public interface IMensagemBll
 	{
 		void ConfigurarServidor(string servidor, string usuario, string senha, int porta);
-		Models.RetornoAcaoModel EnviarMensagem(Models.MensagemEmailModel mensagem);
+		Models.GeneralResponseModel<bool> EnviarMensagem(Models.MensagemEmailModel mensagem);
 		Models.MensagemEmailModel MontarCabecalhoCorpoEmail(object dadosParaPreencherOCorpo);
 	}
 }

@@ -67,11 +67,12 @@ namespace Zambo.Utility
 		/// </summary>
 		/// <param name="mensagem">Models.MensagemEmailModel</param>
 		/// <returns>True or False</returns>
-		public Models.RetornoAcaoModel EnviarMensagem(Models.MensagemEmailModel mensagem)
+		public Models.GeneralResponseModel<bool> EnviarMensagem(Models.MensagemEmailModel mensagem)
 		{
-			Models.RetornoAcaoModel retorno = new Models.RetornoAcaoModel();
+			Models.GeneralResponseModel<bool> retorno = new Models.GeneralResponseModel<bool>();
 			MailMessage mailMessage = new MailMessage();
 
+			// Trocar por https://github.com/jstedfast/MailKit
 			System.Net.Mail.SmtpClient smtpClient = new System.Net.Mail.SmtpClient
 			{
 				Host = this.host,
@@ -106,7 +107,7 @@ namespace Zambo.Utility
 							}
 							else
 							{
-								retorno.Mensagem = "Não foi passado pelo menos um destinatário para a mensagem!";
+								retorno.Message = "Não foi passado pelo menos um destinatário para a mensagem!";
 							}
 						}
 
@@ -146,16 +147,16 @@ namespace Zambo.Utility
 						//Envia a mensagem
 						smtpClient.Send(mailMessage);
 
-						retorno.Resultado = true;
+						retorno.Response = true;
 					}
 					else
 					{
-						retorno.Mensagem = "Não foi passado pelo menos um destinatário para a mensagem!";
+						retorno.Message = "Não foi passado pelo menos um destinatário para a mensagem!";
 					}
 				}
 				else
 				{
-					retorno.Mensagem = "Não foi passado um remetente para a mensagem!";
+					retorno.Message = "Não foi passado um remetente para a mensagem!";
 				}
 			}
 			// Testa se o email está criado
@@ -167,23 +168,23 @@ namespace Zambo.Utility
 					if (status == SmtpStatusCode.MailboxBusy ||
 						status == SmtpStatusCode.MailboxUnavailable)
 					{
-						retorno.Mensagem = "Delivery failed - retrying in 5 seconds.";
+						retorno.Message = "Delivery failed - retrying in 5 seconds.";
 						System.Threading.Thread.Sleep(5000);
 						smtpClient.Send(mailMessage);
 					}
 					else
 					{
-						retorno.Mensagem = string.Format("Failed to deliver message to {0}", sfre.InnerExceptions[i].FailedRecipient);
+						retorno.Message = string.Format("Failed to deliver message to {0}", sfre.InnerExceptions[i].FailedRecipient);
 					}
 				}
 			}
 			catch (FormatException fex)
 			{
-				retorno.Mensagem = fex.ToString();
+				retorno.Message = fex.ToString();
 			}
 			catch (Exception ex)
 			{
-				retorno.Mensagem = ex.ToString();
+				retorno.Message = ex.ToString();
 			}
 
 			return retorno;
