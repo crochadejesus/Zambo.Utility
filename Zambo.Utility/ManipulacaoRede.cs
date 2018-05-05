@@ -25,13 +25,13 @@ namespace Zambo.Utility
             }
         }
 
-        public Common.Model.RetornoAcaoModel<System.Text.StringBuilder> CopiarArquivos(MoverArquivosParam parametros)
+        public GeneralResponseModel<System.Text.StringBuilder> CopiarArquivos(MoverArquivosParam parametros)
         {
             if (parametros.DirSeraMovidoAnoExist)
             {
                 if (parametros.RetornoAcaoModel == null)
                 {
-                    parametros.RetornoAcaoModel = new Common.Model.RetornoAcaoModel<System.Text.StringBuilder>
+                    parametros.RetornoAcaoModel = new GeneralResponseModel<System.Text.StringBuilder>
                     {
                         Retorno = new System.Text.StringBuilder()
                     };
@@ -157,15 +157,15 @@ namespace Zambo.Utility
             sw.Close();
         }
 
-        public Common.Model.RetornoAcaoModel<System.Text.StringBuilder> MoverArquivos(MoverArquivosParam parametros)
+        public GeneralResponseModel<System.Text.StringBuilder> MoverArquivos(MoverArquivosParam parametros)
         {
-            System.Collections.Generic.IList<Common.Model.RetornoAcaoModel<string>> listaResultadoCopiarApagar = new System.Collections.Generic.List<Common.Model.RetornoAcaoModel<string>>();
+            System.Collections.Generic.IList<GeneralResponseModel<string>> listaResultadoCopiarApagar = new System.Collections.Generic.List<GeneralResponseModel<string>>();
 
             if (parametros.DirSeraMovidoAnoExist)
             {
                 if (parametros.RetornoAcaoModel == null)
                 {
-                    parametros.RetornoAcaoModel = new Common.Model.RetornoAcaoModel<System.Text.StringBuilder>
+                    parametros.RetornoAcaoModel = new GeneralResponseModel<System.Text.StringBuilder>
                     {
                         Retorno = new System.Text.StringBuilder()
                     };
@@ -179,7 +179,7 @@ namespace Zambo.Utility
                         string novoCaminho = string.Format("{0}\\{1}", parametros.DiretorioDestino, arquivosParaCopiarApagar[j].Name);
                         FileCopy(arquivosParaCopiarApagar[j].FullName, novoCaminho, true, parametros.Credencial);
 
-                        listaResultadoCopiarApagar.Add(new Common.Model.RetornoAcaoModel<string>()
+                        listaResultadoCopiarApagar.Add(new GeneralResponseModel<string>()
                         {
                             Resultado = true,
                             Retorno = arquivosParaCopiarApagar[j].FullName
@@ -187,7 +187,7 @@ namespace Zambo.Utility
                     }
                     catch (System.UnauthorizedAccessException uae)
                     {
-                        listaResultadoCopiarApagar.Add(new Common.Model.RetornoAcaoModel<string>()
+                        listaResultadoCopiarApagar.Add(new GeneralResponseModel<string>()
                         {
                             Resultado = false
                         });
@@ -222,7 +222,7 @@ namespace Zambo.Utility
             string filePathFullName,
             Interface.Gui.IConvercaoArquivo converterArquivo,
             DirectoryInfo directoryInfo,
-            Common.Model.RetornoAcaoModel<System.Text.StringBuilder> retornoAcaoModel)
+            GeneralResponseModel<System.Text.StringBuilder> retornoAcaoModel)
         {
             var dirSeraMovido = string.Format("{0}{1}", filePathFullName, System.Configuration.ConfigurationManager.AppSettings["finalizado"]);
             var diretorioDestino = string.Format("{0}\\{1}", dirSeraMovido, System.DateTime.Today.Year.ToString());
