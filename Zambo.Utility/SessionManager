@@ -72,6 +72,17 @@ public class SessionManager
         }
 
         public string UserEmail { get; private set; }
+        
+        public bool IsLoged()
+        {
+            bool response = false;
+            if (Cookied != null)
+            {
+                response = true;
+            }
+
+            return response;
+        }
 
         public bool IsPermited(string actionName)
         {
