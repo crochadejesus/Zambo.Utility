@@ -31,19 +31,26 @@ namespace Zambo.Site.Extensions
 
         private void VerifyAuthorizationToAccess(ActionExecutingContext filterContext)
         {
-            if (!SessionManager.Current.IsPermited(ActionName))
+            if (!SessionManager.Current.IsLoged())
             {
-                Type tipoRetorno = (((ReflectedActionDescriptor)(filterContext.ActionDescriptor)).MethodInfo).ReturnType;
+                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary { { "action", "Index" }, { "controller", "Login" } });
+            }
+            else
+            {
+                if (!SessionManager.Current.IsPermited(ActionName))
+                {
+                    Type tipoRetorno = (((ReflectedActionDescriptor)(filterContext.ActionDescriptor)).MethodInfo).ReturnType;
 
-                if (tipoRetorno == typeof(JsonResult))
-                {
-                    filterContext.Result = new HttpUnauthorizedResult();
-                    filterContext.HttpContext.Response.StatusCode = 403;
-                }
-                else
-                {
-                    filterContext.Controller.ViewBag.ErrorMessage = "Restrict Access! The user don't have the necessary authorization.";
-                    new HttpAntiForgeryException("Restrict Access! The user don't have the necessary authorization.");
+                    if (tipoRetorno == typeof(JsonResult))
+                    {
+                        filterContext.Result = new HttpUnauthorizedResult();
+                        filterContext.HttpContext.Response.StatusCode = 403;
+                    }
+                    else
+                    {
+                        filterContext.Controller.ViewBag.ErrorMessage = "Restrict Access! The user don't have the necessary authorization.";
+                        throw new HttpAntiForgeryException("Restrict Access! The user don't have the necessary authorization.");
+                    }
                 }
             }
         }
