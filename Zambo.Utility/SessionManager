@@ -1,3 +1,10 @@
+using System.Collections.Generic;
+using System.Web;
+using Zambo.Domain.Models.Common.Request;
+using Zambo.Domain.Models.Security.Dto;
+using Zambo.Site.Client.Security;
+using Zambo.Site.Client.Security.Interfaces;
+
 public class SessionManager
     {
         private ISecurityApiClient _infraestructureClient;
