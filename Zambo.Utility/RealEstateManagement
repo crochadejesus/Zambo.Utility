@@ -510,5 +510,74 @@ public PagedList<RealEstateInformationResponse> GetAssets(RealEstateSearchFilter
             return selectList;
         }
         
+ public class LookupsApiClient : ILookupsApiClient
+    {
+      <appSettings>
+    <add key="webpages:Version" value="3.0.0.0" />
+    <add key="webpages:Enabled" value="false" />
+    <add key="ClientValidationEnabled" value="true" />
+    <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+    <add key="MaxFavorites" value="20" />
+    <add key="SiteUrl" value="http://localhost:6984/" />
+    <add key="DebugMode" value="true" />
+    
+    <add key="PhotoAllowedMimeTypes" value="/(\.|\/)(gif|jpe?g|png)$/i" />
+    <add key="DocumentAllowedMimeTypes" value="/(\.|\/)(pdf|doc|docx|xls|xlsx)$/i" />
+    <add key="PhotoAllowedFileSize" value="3000000" />   <!-- Size: 3000000bytes = 3Mb -->
+    <add key="GoogleMapsApiKey" value="AIzaSyDtKn9hHlcrw7UPgKdLczQN_SogxQONqYw" />
+    <add key="GoogleAnalyticsTrackingID" value="UA-39562151-3" />
+    <add key="AssetApiUrl" value="http://localhost:41202/" />
+  </appSettings>
+  
+        private const string _lookupsController = "Lookups/";
+        private readonly string _endpoint = "";
+
+        public LookupsApiClient()
+        {
+            _endpoint = ConfigurationManager.AppSettings["AssetApiUrl"];
+        }
         
+        GeneralResponse<IDictionary<int, string>> ILookupsApiClient.GetActives(string token)
+        {
+            return GetLookupForMethodDictionay("GetActives", token);
+        }
+        
+        private GeneralResponse<IDictionary<int, string>> GetLookupForMethodDictionay(string methodName, string token)
+        {
+            var param = new GeneralRequest<SearchFiltersRequest>()
+            {
+                Token = token
+            };
+
+            using (var httpClient = new HttpClient())
+            {
+                var endpoint = new StringBuilder().Append(_endpoint).Append(_lookupsController).Append(methodName).ToString();
+                var response = httpClient.PostAsJsonAsync(endpoint, param).Result;
+                return JsonConvert.DeserializeObject<GeneralResponse<IDictionary<int, string>>>(response.Content.ReadAsStringAsync().Result);
+            }
+        }
+        
+        GeneralResponse<ActivityHistoryResponse[]> IRealEstateValuationApiClient.GetActivityHistories(long requestId, string token)
+        {
+            var param = new GeneralRequest<long>()
+            {
+                Request = requestId,
+                Token = token
+            };
+
+            using (var httpClient = new HttpClient())
+            {
+                var result = new GeneralResponse<ActivityHistoryResponse[]>();
+                var endpoint = new StringBuilder().Append(_endpoint).Append(_realEstateController).Append("GetActivityHistories").ToString();
+                var response = httpClient.PostAsJsonAsync(endpoint, param).Result;
+                result = JsonConvert.DeserializeObject<GeneralResponse<ActivityHistoryResponse[]>>(response.Content.ReadAsStringAsync().Result);
+                if (!result.Success)
+                {
+                    result.Response = null;
+                }
+
+                return result;
+            }
+        }
+     }
         
