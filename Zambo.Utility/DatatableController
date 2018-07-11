@@ -1,0 +1,114 @@
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
+using Value.Site.Extensions;
+using Value.Site.Models;
+using Value.Api.Client;
+using Value.Api.RealEstateEntities;
+
+
+namespace Value.Site.Controllers
+{
+    public class DatatableController : BaseController
+    {
+        public ViewResult Index()
+        {
+            return View();
+        }
+
+        public JsonResult RenderList(FormCollection param)
+        {
+            JsonResult jsonResult = null;
+
+            try
+            {
+                var model = new SearchPageViewModel();
+                var searchViewModel = FillSearchViewModel();
+                var searchModel = GetSearchCriteria();
+                searchModel.LanguageId = LanguageId;
+                searchModel.PageSize = Convert.ToInt16(param["length"]);
+                searchModel.PageNumber = (Convert.ToInt16(param["start"]) / Convert.ToInt16(param["length"])) + 1;
+                searchViewModel.SearchCriteria = searchModel;
+
+                #region Set Default Values
+
+                if (searchViewModel.SearchCriteria.PropertyType.HasValue)
+                    searchViewModel.PropertyType.FirstOrDefault(x => x.Value == searchViewModel.SearchCriteria.PropertyType.Value.ToString()).Selected = true;
+
+                searchViewModel.SortBy.FirstOrDefault(x => x.Value == searchViewModel.SearchCriteria.SortBy.ToString()).Selected = true;
+
+                if (searchViewModel.SearchCriteria.District.HasValue)
+                    searchViewModel.District.FirstOrDefault(x => x.Value == searchViewModel.SearchCriteria.District.Value.ToString()).Selected = true;
+
+                searchViewModel.MostRecentOptions.FirstOrDefault(x => x.Value == searchViewModel.SearchCriteria.MostRecentOptions.ToString()).Selected = true;
+
+                #endregion Set Default Values
+
+                var realEstates = RealEstateClient.GetRealEstates(AutoMapper.Mapper.Map<RealEstateSearchFilters>(searchModel));
+
+                model.SearchViewModel = searchViewModel;
+                model.AssetViewModel = new AssetViewModel { Assets = realEstates };
+                model.SugestedSearches = RealEstateClient.GetPopularSearches(10, LanguageId, searchModel.District, null, null);
+
+                jsonResult = Json(new { data = model.AssetViewModel.Assets.Rows }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                jsonResult = Json(new { error = "Ocorreu um erro!" }, JsonRequestBehavior.AllowGet);
+            }
+
+            return jsonResult;
+        }
+
+        private SearchViewModel FillSearchViewModel()
+        {
+            var type = RealEstateClient.GetTipologyTypes(LanguageId).OrderBy(x => x.Description).ToList();
+            var districts = RealEstateClient.GetDistricts().OrderBy(x => x.Description).ToList();
+            var status = RealEstateClient.GetRealEstateConditions(LanguageId).OrderBy(x => x.Description).ToList();
+            //var size = client.GetTipologySizes(languageId);
+            var searchViewModel = new SearchViewModel();
+
+            searchViewModel.PropertyType = AutoMapper.Mapper.Map<List<SelectListItem>>(type);
+            searchViewModel.District = AutoMapper.Mapper.Map<List<SelectListItem>>(districts);
+            searchViewModel.PropertyCondition = AutoMapper.Mapper.Map<List<SelectListItem>>(status);
+            searchViewModel.SortBy = EnumHelper.BuildSelectListItems(typeof(SortBy));
+            searchViewModel.MostRecentOptions = EnumHelper.BuildSelectListItems(typeof(MostRecentOptions));
+
+            return searchViewModel;
+        }
+
+        private void SaveSearchCriteria(SearchModel searchCriteria)
+        {
+            //change/create search criteria session
+            Session["SearchCriteria"] = JsonConvert.SerializeObject(searchCriteria);
+            //reset last page number
+            SavePageNumber(1);
+            //reset last visited asset
+            SaveLastVisitedAsset(0);
+        }
+
+        private void SavePageNumber(int pageNumber)
+        {
+            Session["LoadMorePageNumber"] = pageNumber;
+        }
+
+        private SearchModel GetSearchCriteria()
+        {
+            return (Session["SearchCriteria"] != null) ?
+                JsonConvert.DeserializeObject<SearchModel>(Session["SearchCriteria"].ToString()) :
+                new SearchModel();
+        }
+
+
+        private void SaveLastVisitedAsset(int assetId)
+        {
+            Session["LastVisitedAssetID"] = assetId;
+        }
+
+
+    }
+
+
+}
