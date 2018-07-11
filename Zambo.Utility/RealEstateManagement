@@ -281,5 +281,205 @@ public PagedList<RealEstateInformationResponse> GetAssets(RealEstateSearchFilter
            
             return mergedResults;
         }
+        public JsonResult GetRequests(JQueryDataTableParamModel param)
+        {
+            JsonResult jsonResult = null;
+
+            try
+            {
+                var searchModel = GetSearchCriteria();
+                searchModel.PageSize = param.length;
+                searchModel.PageNumber = (param.start / param.length) + 1;
+                searchModel.AllFields = param.search.value;
+
+                if (param.filters != null)
+                {
+                    // Header Filters
+                    DateTime? dateTimeNullable = null;
+                    short? shortNull = null;
+                    int? intNull = null;
+                    searchModel.AppraiserCompanyId = string.IsNullOrWhiteSpace(param.filters.CompanyId) ? shortNull : Convert.ToInt16(param.filters.CompanyId);
+                    searchModel.AppraiserUserId = string.IsNullOrWhiteSpace(param.filters.AppraiserUser) ? shortNull : Convert.ToInt16(param.filters.AppraiserUser);
+                    searchModel.AssetTypeId = string.IsNullOrWhiteSpace(param.filters.GetAssetTypes) ? shortNull : Convert.ToInt16(param.filters.GetAssetTypes);
+                    searchModel.MethodId = string.IsNullOrWhiteSpace(param.filters.MethodId) ? shortNull : Convert.ToInt16(param.filters.MethodId);
+                    searchModel.RequestDueDate = string.IsNullOrWhiteSpace(param.filters.requestduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.requestduedate);
+                    searchModel.AppraiserDueDate = string.IsNullOrWhiteSpace(param.filters.appraiserduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.appraiserduedate);
+                    searchModel.RequestId = string.IsNullOrWhiteSpace(param.filters.request_id) ? intNull : Convert.ToInt32(param.filters.request_id);
+                    searchModel.SourceReference = param.filters.reference;
+                    searchModel.StatusId = string.IsNullOrWhiteSpace(param.filters.StatusId) ? shortNull : Convert.ToInt16(param.filters.StatusId);
+                    searchModel.TechnicianUserId = string.IsNullOrWhiteSpace(param.filters.TechnicianUser) ? shortNull : Convert.ToInt16(param.filters.TechnicianUser);
+                    searchModel.CountyId = string.IsNullOrWhiteSpace(param.filters.countyid) ? shortNull : Convert.ToInt16(param.filters.countyid);
+
+
+                    if (param.filters.GoalCompletionStatus != null)
+                    {
+                        switch (param.filters.GoalCompletionStatus)
+                        {
+                            case Models.GoalCompletionStatus.OnTrack:
+                                {
+                                    searchModel.GoalCompletionStatus = Domain.Models.Valuations.Enums.GoalCompletionStatus.OnTrack;
+                                    break;
+                                }
+                            case Models.GoalCompletionStatus.Behind:
+                                {
+                                    searchModel.GoalCompletionStatus = Domain.Models.Valuations.Enums.GoalCompletionStatus.Behind;
+                                    break;
+                                }
+                            case Models.GoalCompletionStatus.Overdue:
+                                {
+                                    searchModel.GoalCompletionStatus = Domain.Models.Valuations.Enums.GoalCompletionStatus.Overdue;
+                                    break;
+                                }
+                            case Models.GoalCompletionStatus.Complete:
+                                {
+                                    searchModel.GoalCompletionStatus = Domain.Models.Valuations.Enums.GoalCompletionStatus.Complete;
+                                    break;
+                                }
+                        }
+                    }
+
+                    // Advanced Search
+                    searchModel.SourceReferenceAdvanced = param.filters.ReferenceAdv;
+                    searchModel.AppraiserCompanyIds = (param.filters.CompanyIdList != null && !string.IsNullOrWhiteSpace(param.filters.CompanyIdList.FirstOrDefault())) ? param.filters.CompanyIdList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.AppraiserUserIds = (param.filters.AppraiserUserList != null && !string.IsNullOrWhiteSpace(param.filters.AppraiserUserList.FirstOrDefault())) ? param.filters.AppraiserUserList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.AssetSubTypeIds = (param.filters.AssetSubTypesList != null && !string.IsNullOrWhiteSpace(param.filters.AssetSubTypesList.FirstOrDefault())) ? param.filters.AssetSubTypesList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.AssetTypeIds = (param.filters.GetAssetTypesList != null && !string.IsNullOrWhiteSpace(param.filters.GetAssetTypesList.FirstOrDefault())) ? param.filters.GetAssetTypesList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.MethodIds = (param.filters.MethodIdList != null && !string.IsNullOrWhiteSpace(param.filters.MethodIdList.FirstOrDefault())) ? param.filters.MethodIdList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.StatusIds = (param.filters.StatusIdList != null && !string.IsNullOrWhiteSpace(param.filters.StatusIdList.FirstOrDefault())) ? param.filters.StatusIdList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.TechnicianUserIds = (param.filters.TechnicianUserList != null && !string.IsNullOrWhiteSpace(param.filters.TechnicianUserList.FirstOrDefault())) ? param.filters.TechnicianUserList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.AppraiserDueDateMin = string.IsNullOrWhiteSpace(param.filters.MinApprduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MinApprduedate);
+                    searchModel.AppraiserDueDateMax = string.IsNullOrWhiteSpace(param.filters.MaxApprduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MaxApprduedate);
+                    searchModel.CreationDateMin = string.IsNullOrWhiteSpace(param.filters.MinRequestcreatedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MinRequestcreatedate);
+                    searchModel.CreationDateMax = string.IsNullOrWhiteSpace(param.filters.MaxRequestcreatedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MaxRequestcreatedate);
+                    searchModel.RequestDueDateMin = string.IsNullOrWhiteSpace(param.filters.MinRequestduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MinRequestduedate);
+                    searchModel.RequestDueDateMax = string.IsNullOrWhiteSpace(param.filters.MaxRequestduedate) ? dateTimeNullable : Convert.ToDateTime(param.filters.MaxRequestduedate);
+                    searchModel.CountyIds = (param.filters.CountyIdList != null && !string.IsNullOrWhiteSpace(param.filters.CountyIdList.FirstOrDefault())) ? param.filters.CountyIdList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.RequesterUserIds = (param.filters.RequestersList != null && !string.IsNullOrWhiteSpace(param.filters.RequestersList.FirstOrDefault())) ? param.filters.RequestersList.Select(x => short.Parse(x)).ToArray() : null;
+                    searchModel.TeamIds = (param.filters.TeamsList != null && !string.IsNullOrWhiteSpace(param.filters.TeamsList.FirstOrDefault())) ? param.filters.TeamsList.Select(x => short.Parse(x)).ToArray() : null;
+                }
+
+                searchModel.SortBy = new SortBy[param.order.Length];
+
+                if (param.order != null && param.order.Length > 0)
+                {
+                    SortBy sortBy = new SortBy();
+
+                    for (var i = 0; i < param.order.Length; i++)
+                    {
+                        switch (param.order[i].column)
+                        {
+                            case 0:
+                                {
+                                    sortBy.CollumnName = "RequestId";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 1:
+                                {
+                                    sortBy.CollumnName = "SourceReference";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 2:
+                                {
+                                    sortBy.CollumnName = "AssetType";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 3:
+                                {
+                                    sortBy.CollumnName = "ValuationMethod";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 4:
+                                {
+                                    sortBy.CollumnName = "WorkflowStatusName";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 5:
+                                {
+                                    sortBy.CollumnName = "RequestDueDate";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 6:
+                                {
+                                    sortBy.CollumnName = "TechnicianUserName";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 7:
+                                {
+                                    sortBy.CollumnName = "AppraiserUserName";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 8:
+                                {
+                                    sortBy.CollumnName = "AppraiserCompanyName";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 9:
+                                {
+                                    sortBy.CollumnName = "AppraiserDueDate";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                            case 10:
+                                {
+                                    sortBy.CollumnName = "CountyName";
+                                    sortBy.Direction = param.order[i].dir;
+                                    searchModel.SortBy.SetValue(sortBy, i);
+                                    break;
+                                }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(SessionManager.Current.AccessToken))
+                {
+                    var response = RealEstateValuationClient.GetRequests(searchModel, SessionManager.Current.AccessToken);
+                    if (response.Success)
+                    {
+                        //var model = new RequestViewModel { Valuations = response };
+
+                        jsonResult = Json(
+                            new JQueryDataTableResultModel<RequestGridResponse>
+                            {
+                                draw = param.draw,
+                                iTotalRecords = response.Response.TotalRows,
+                                iTotalDisplayRecords = response.Response.TotalRows,
+                                irecordsFiltered = response.Response.TotalRows,
+                                aaData = response.Response.Rows
+                            }, JsonRequestBehavior.AllowGet
+                        );
+                    }
+                    else
+                    {
+                        jsonResult = Json(new { Sucess = response.Success, Message = response.Message }, JsonRequestBehavior.AllowGet);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                jsonResult = Json(new { error = string.Format("An Error Occured : {0} - Inner exception - {1}", ex.Message, ex.InnerException) }, JsonRequestBehavior.AllowGet);
+            }
+
+            return jsonResult;
+        }
+        
         
         
