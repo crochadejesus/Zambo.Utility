@@ -1,0 +1,66 @@
+using System;
+
+namespace Value.Domain.Models.Valuations.Request
+{
+    public enum MostRecentOptions
+    {
+        ViewedRecently,
+        UpdatedRecently,
+        ClosedRecently
+    }
+
+    public class SearchFiltersRequest
+    {
+        public string AllFields { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public SortBy[] SortBy { get; set; } = new SortBy[] { };
+
+        #region Header Filters
+
+        public short? AppraiserCompanyId { get; set; }
+        public DateTime? AppraiserDueDate { get; set; }
+        public short? AppraiserUserId { get; set; }
+        public short? AssetSubTypeId { get; set; }
+        public short? AssetTypeId { get; set; }
+        public short? CountyId { get; set; }
+        public DateTime? CreationDate { get; set; }
+        public Nullable<Enums.GoalCompletionStatus> GoalCompletionStatus { get; set; }
+        public short? MethodId { get; set; }
+        public Nullable<MostRecentOptions> MostRecentOptions { get; set; }
+        public DateTime? RequestDueDate { get; set; }
+        public long? RequestId { get; set; }
+        public short? StatusId { get; set; }
+        public short? TechnicianUserId { get; set; }
+        #endregion Header Filters
+
+        public string SourceReference { get; set; }
+
+        #region Advanced Filters
+
+        public short[] AppraiserCompanyIds { get; set; }
+        public DateTime? AppraiserDueDateMax { get; set; }
+        public DateTime? AppraiserDueDateMin { get; set; }
+        public short[] AppraiserUserIds { get; set; }
+        public short[] AssetSubTypeIds { get; set; }
+        public short[] AssetTypeIds { get; set; }
+        public short[] CountyIds { get; set; }
+        public DateTime? CreationDateMax { get; set; }
+        public DateTime? CreationDateMin { get; set; }
+        public short[] MethodIds { get; set; }
+        public DateTime? RequestDueDateMax { get; set; }
+        public DateTime? RequestDueDateMin { get; set; }
+        public short[] RequesterUserIds { get; set; }
+        public string SourceReferenceAdvanced { get; set; }
+        public short[] StatusIds { get; set; }
+        public short[] TeamIds { get; set; }
+        public short[] TechnicianUserIds { get; set; }
+        #endregion Advanced Filters
+    }
+
+    public class SortBy
+    {
+        public string CollumnName { get; set; }
+        public string Direction { get; set; }
+    }
+}
