@@ -482,4 +482,33 @@ public PagedList<RealEstateInformationResponse> GetAssets(RealEstateSearchFilter
         }
         
         
+
+        private SearchFiltersRequest GetSearchCriteria()
+        {
+            return (Session["SearchCriteria"] != null) ?
+                JsonConvert.DeserializeObject<SearchFiltersRequest>(Session["SearchCriteria"].ToString()) :
+                new SearchFiltersRequest();
+        }
+
+        private IEnumerable<SelectListItem> GetSelectListGoalCompletionStatus()
+        {
+            var selectList = new List<SelectListItem>();
+
+            var enumValues = Enum.GetValues(typeof(GoalCompletionStatus)) as GoalCompletionStatus[];
+            if (enumValues == null)
+                return null;
+
+            foreach (var enumValue in enumValues)
+            {
+                selectList.Add(new SelectListItem
+                {
+                    Value = enumValue.ToString(),
+                    Text = enumValue.ToString()
+                });
+            }
+
+            return selectList;
+        }
+        
+        
         
