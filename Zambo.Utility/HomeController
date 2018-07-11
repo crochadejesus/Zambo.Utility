@@ -1,0 +1,52 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using Value.Site.Models;
+using Value.Api.RealEstateEntities;
+
+namespace Value.Site.Controllers
+{
+    public class HomeController : BaseController
+    {
+        // Homepage
+        public ActionResult Index()
+        {
+            Session["SearchCriteria"] = null;
+            
+            ViewBag.Home = true;
+
+            var model = new HomeViewModel();
+            var featuredAssetsFilters = new RealEstateSearchFilters
+            {
+                IsHighlighted = true,
+                PageNumber = 1,
+                PageSize = 4,
+                LanguageId = LanguageId,
+                RandomSort = true,
+                StatusId = 1
+            };
+
+
+            model.FeaturedAssets = RealEstateClient.GetRealEstates(featuredAssetsFilters);
+
+            var mostViewedAssetsFilters = new RealEstateSearchFilters
+            {
+                PageNumber = 1,
+                PageSize = 8,
+                LanguageId = LanguageId,
+                SortBy = SortBy.MostViewed,
+                StatusId = 1
+            };
+
+
+            model.MostPopularAssets = RealEstateClient.GetRealEstates(mostViewedAssetsFilters);
+
+
+            model.AssetTypes = AutoMapper.Mapper.Map<List<SelectListItem>>(RealEstateClient.GetHomePageTipologyTypes(LanguageId));
+
+            return View(model);
+        }
+    }
+}
