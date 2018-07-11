@@ -1,0 +1,160 @@
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Web.Mvc;
+using Value.Site.Models;
+using Value.Api.Client;
+
+namespace Value.Site.Controllers
+{
+    public class NewsletterController : BaseController
+    {
+        // GET: Newsletter
+        public ActionResult Subscribe()
+        {
+            var districts = RealEstateClient.GetDistricts().OrderBy(x => x.Description).ToList();
+            var model = new NewsletterViewModel();
+            model.District = AutoMapper.Mapper.Map<List<SelectListItem>>(districts);
+            return PartialView("_SubscriptionForm", model);
+        }
+
+        // POST: Newsletter/Subscribe
+        [HttpPost]
+        public ActionResult Subscribe(NewsletterModel newsletterViewModel)
+        {
+            bool result = false;
+            string resultMessage = "";
+
+            if (IsValidEmail(newsletterViewModel.Email))
+            {
+                try
+                {
+                    var client = new NewsletterClient();
+                    result = client.AddNewsletterSubscription(newsletterViewModel.Email, newsletterViewModel.District, newsletterViewModel.County, 169, Convert.ToInt32(GetCookie("Language").Value));
+
+                    if (result)
+                    {
+                        var registeredNewsletter = client.GetNewsletterForActivation(newsletterViewModel.Email);
+
+                        var body = System.IO.File.ReadAllText(HttpContext.Server.MapPath("~\\Views\\_Templates\\EmailSubscripitionConfirmation.html"));
+
+                        body = body.Replace("#SITEURL#", ConfigurationManager.AppSettings["SiteUrl"]);
+                        body = body.Replace("#EMAIL#", newsletterViewModel.Email);
+                        body = body.Replace("#UNIQUEGUID#", registeredNewsletter.UniqueId.ToString());
+                        body = body.Replace("#NewsletterSubscriptionTitleText#", LanguageResources.Resources.SubscriptionNewsletterTitleText);
+                        body = body.Replace("#ConfirmEmailAddressText#", LanguageResources.Resources.SubscriptionConfirmEmailAddressText);
+                        body = body.Replace("#SubscribeMeText#", LanguageResources.Resources.SubscriptionSubscribeMeText);
+                        body = body.Replace("#SubscriptionExplanationText#", LanguageResources.Resources.SubscriptionExplanationText);
+
+
+                        result = client.SendNewsletterActivationEmail(body, newsletterViewModel.Email);
+                    }
+                }
+                catch (Exception e)
+                {
+                    resultMessage = e.Message;
+                    result = false;
+                }
+            }
+            return Json(new { success = result, message = resultMessage });
+        }
+
+        [HttpGet]
+        public ActionResult ActivateNewsletter(string email, string uniqueId)
+        {
+            bool result = false;
+            string resultMessage = "";
+            try
+            {
+                var client = new NewsletterClient();
+                result = client.ActivateNewsletter(email, uniqueId);
+            }
+            catch (Exception e)
+            {
+                resultMessage = e.Message;
+            }
+            return View(result);
+        }
+
+
+        [HttpGet]
+        public ActionResult Unsubscribe(string uniqueId)
+        {
+            var client = new NewsletterClient();
+            var result = client.CancelNewsletterSubscription(uniqueId);
+            return View(result);
+        }
+
+        [HttpGet]
+        [OutputCache(NoStore = true, Duration = 0)]
+        public ActionResult Account(string email, string uniqueId)
+        {
+            //check required parameters
+            if (String.IsNullOrEmpty(email) || String.IsNullOrEmpty(uniqueId)) { return RedirectToAction("BadRequest", "Error"); }
+            try
+            {
+                //get subscription
+                var subscription = new NewsletterClient().GetSubscription(uniqueId);
+                if (subscription == null || subscription.Email != email) {
+                    return RedirectToAction("NotFound", "Error");
+                }
+                //get model
+                var model = new SubscriptionViewModel
+                {
+                    AccountEmail = subscription.Email,
+                    AccountUniqueId = subscription.UniqueId.ToString(),
+                    SubscriptionDate = subscription.SubscriptionDate,
+                    LanguageId = subscription.LanguageId,
+                    DistrictId = subscription.DistrictId,
+                    CountyId = subscription.CountyId
+                };
+                //get languages
+                var languages = RealEstateClient.GetAvailableLanguages().ToList();
+                model.Language = AutoMapper.Mapper.Map<List<SelectListItem>>(languages);
+                //get districts
+                var districts = RealEstateClient.GetDistricts().OrderBy(x => x.Description).ToList();
+                model.District = AutoMapper.Mapper.Map<List<SelectListItem>>(districts);
+                //get counties
+                if (model.DistrictId.GetValueOrDefault() > 0)
+                {
+                    var counties = RealEstateClient.GetCountiesByDistrict(model.DistrictId.Value);
+                    model.County = AutoMapper.Mapper.Map<List<SelectListItem>>(counties);
+                }
+                //render
+                return View(model);
+            }
+            catch (Exception)
+            {
+                return RedirectToAction("BadRequest", "Error");
+            }            
+        }
+                
+        [HttpPost]
+        public ActionResult UpdateSubscription(string accountUniqueId, int languageId, int? districtId, int? countyId)
+        {
+            var result = false;
+            try
+            {
+                var client = new NewsletterClient();
+                result = client.UpdateSubscription(accountUniqueId, languageId, districtId, countyId);
+            }
+            catch (Exception){}
+            return Json(new { done = result });
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+    }
+}
