@@ -1,0 +1,38 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace Value.Site.Controllers
+{
+    public class PhotosController : BaseController
+    {
+        [HttpGet]
+        public ActionResult GetPhoto(int photoId, int? width, int? height, bool? crop)
+        {
+            if (!width.HasValue)
+                width = 0;
+
+            if (!height.HasValue)
+                height = 0;
+
+            if (!crop.HasValue)
+                crop = true;
+
+            var photoContent = new byte[0];
+
+            if (photoId != 0)
+                photoContent = RealEstateClient.GetAssetPhoto(photoId, width.Value, height.Value, crop.Value);
+            
+            if (photoContent.Length == 0)
+            {
+                //get default image
+                photoContent = System.IO.File.ReadAllBytes(Server.MapPath(Url.Content("~/Content/Images/noimage.png")));
+            }
+
+            return File(photoContent, "image/png");
+        }
+    }
+}
