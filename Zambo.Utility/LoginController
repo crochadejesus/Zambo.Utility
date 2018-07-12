@@ -10,6 +10,10 @@ namespace Value.Site.Controllers
 {
     public class LoginController : BaseController
     {
+    
+    // colocar no html
+    // <script src="@System.Web.Optimization.BundleTable.Bundles.ResolveBundleUrl("~/bundles/value-newrequest")"></script>
+
         // GET: Login
         public ActionResult Index()
         {
