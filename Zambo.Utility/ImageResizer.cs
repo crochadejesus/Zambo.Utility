@@ -4,9 +4,9 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using Value.Infrastructure.Configuration;
+using Zambo.Utility.Infrastructure.Configuration;
 
-namespace Value.Infrastructure.Helpers
+namespace Zambo.Utility.Infrastructure.Helpers
 {
     public enum AnchorPosition
     {
