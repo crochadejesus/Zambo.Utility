@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Value.Infrastructure.Configuration;
+using Zambo.Infrastructure.Configuration;
 
-namespace Value.Infrastructure.Helpers
+namespace Zambo.Utility.Helpers
 {
     public class FileManager
     {
