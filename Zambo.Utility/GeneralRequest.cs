@@ -1,4 +1,4 @@
-namespace Value.Domain.Models.Common.Request
+namespace Zambo.Utility.Models.Common.Request
 {
     public struct GeneralRequest<T>
     {
