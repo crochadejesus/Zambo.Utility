@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Value.Domain.Models.Common
+namespace Zambo.Utility.Models.Common
 {
     public class PagedList<T>
     {
