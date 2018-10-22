@@ -1,5 +1,5 @@
 
-namespace Value.Domain.Models.Common
+namespace Zambo.Utility.Models.Common
 {
     public struct GeneralResponse<T>
     {
